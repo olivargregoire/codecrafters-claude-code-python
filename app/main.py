@@ -49,7 +49,7 @@ def main():
         raise RuntimeError("no choices in response")
     
     if chat.choices[0].message.tool_calls[0]: 
-        
+
         tool_calls_id                = chat.choices[0].message.tool_calls[0].id
         tool_calls_type              = chat.choices[0].message.tool_calls[0].type
         tool_calls_function_name     = chat.choices[0].message.tool_calls[0].function.name
@@ -62,23 +62,11 @@ def main():
 
         print(content)
 
-
-
-
-
-
-
-
-
-
-
-
-
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
 
     # TODO: Uncomment the following line to pass the first stage
-    print(chat.choices[0].message.content)
+    #print(chat.choices[0].message.content)
 
 
 if __name__ == "__main__":
