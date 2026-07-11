@@ -57,14 +57,14 @@ def main():
         path_to_file = json.loads(tool_calls_function_arguments)["file_path"]
 
         with open(path_to_file, "r") as f:
-            content = f.read()
+            file_content = f.read()
+            print(file_content)
 
-        print(content)
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
 
     # TODO: Uncomment the following line to pass the first stage
-    #print(chat.choices[0].message.content)
+    print(chat.choices[0].message.content)
 
 
 if __name__ == "__main__":
