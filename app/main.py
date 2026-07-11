@@ -48,9 +48,8 @@ def main():
     if not chat.choices or len(chat.choices) == 0:
         raise RuntimeError("no choices in response")
     
-    message = chat["choices"][0]
-
-    if message.get("tool_calls"):
+    if chat.choices[0].message.tool_calls[0]: 
+        
         tool_calls_id                = chat.choices[0].message.tool_calls[0].id
         tool_calls_type              = chat.choices[0].message.tool_calls[0].type
         tool_calls_function_name     = chat.choices[0].message.tool_calls[0].function.name
