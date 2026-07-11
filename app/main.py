@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import json
 
 from openai import OpenAI
 
@@ -21,6 +22,8 @@ def main():
     chat = client.chat.completions.create(
         model="anthropic/claude-haiku-4.5",
         messages=[{"role": "user", "content": args.p}],
+        # AQ1 Advertising the tool : Claude code provides several tools that can be used by the model to read and/or modify the user's codebase.
+        # Here it is the read tool that can read the content of a file. The model can use this tool to read the content of a file and then use it in its context.
         tools=[
             {
                 "type": "function",
@@ -44,6 +47,31 @@ def main():
 
     if not chat.choices or len(chat.choices) == 0:
         raise RuntimeError("no choices in response")
+    
+    if chat.choices[0].finished_reason == "tool_calls":
+        tool_calls_id                = chat.choices[0].message.tool_calls[0].id
+        tool_calls_type              = chat.choices[0].message.tool_calls[0].type
+        tool_calls_function_name     = chat.choices[0].message.tool_calls[0].function.name
+        tool_calls_function_arguments = chat.choices[0].message.tool_calls[0].function.arguments
+
+        path_to_file = json.loads(tool_calls_function_arguments)["file_path"]
+
+        with open(path_to_file, "r") as f:
+            content = f.read()
+            
+        print(content)
+
+
+
+
+
+
+
+
+
+
+
+
 
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
