@@ -44,7 +44,7 @@ def main():
             }
         ]
     )
-    
+
     if not chat.choices or len(chat.choices) == 0:
         raise RuntimeError("no choices in response")
     
@@ -59,11 +59,12 @@ def main():
         with open(path_to_file, "r") as f:
             content = f.read()
 
+        print(content)
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
 
     # TODO: Uncomment the following line to pass the first stage
-    #print(chat.choices[0].message.content)
+    print(chat.choices[0].message.content)
 
 
 if __name__ == "__main__":
