@@ -60,7 +60,7 @@ def main():
         
         # Read tool execution
         if current_response_message.tool_calls: 
-            print("----- in the read tool -------")
+            #print("----- in the read tool -------")
             tool_calls_id                = chat.choices[0].message.tool_calls[0].id
             tool_calls_type              = chat.choices[0].message.tool_calls[0].type
             tool_calls_function_name     = chat.choices[0].message.tool_calls[0].function.name
@@ -75,7 +75,7 @@ def main():
         if not chat.choices[0].message.tool_calls: 
             #print("------- in exit loop -----------")
             loop = False
-            #print(chat.choices[0].message.content)
+            print(chat.choices[0].message.content)
 
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
