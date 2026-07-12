@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import json
+import subprocess
 
 from openai import OpenAI
 
@@ -125,7 +126,14 @@ def main():
                 
                 if tool_calls_function_name == "Bash":
                     command = json.loads(tool_calls_function_arguments)["command"]
-                    print(command)
+                    results = subprocess.run(command, shell=True, capture_output=True, text=True)
+                    if results.returncode == 0:
+                        print(results.stdout)
+                    else:
+                        print(results.stderr)
+
+
+                    
 
 
 
