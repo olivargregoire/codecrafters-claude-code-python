@@ -78,7 +78,7 @@ def main():
             raise RuntimeError("no choices in response")
 
         messages.append(current_response_message.model_dump())
-        print(current_response_message.tool_calls)
+        #print(current_response_message.tool_calls)
         if current_response_message.tool_calls: 
             for tool_call in current_response_message.tool_calls:
 
