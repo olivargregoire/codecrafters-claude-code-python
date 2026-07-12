@@ -73,6 +73,7 @@ def main():
                 messages.append({"role": "tool", "tool_call_id": current_response_message.tool_calls[0].id, "content": file_content})
         
         if not chat.choices[0].message.tool_calls: 
+            print("------- in exit loop -----------")
             loop = False
             print(chat.choices[0].message.content)
 
