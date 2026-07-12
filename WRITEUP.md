@@ -122,3 +122,62 @@ The API returns `function.arguments` as a serialized JSON string (e.g. `'{"file_
 ### What's still missing
 
 The tool result is printed but never sent back to the model. The conversation ends after one tool call. The next stages introduce the **agent loop**: the file contents get added to the message history as a `tool` role message, and the model is called again so it can reason over the result and decide what to do next.
+
+---
+
+## Stage 4 — The Agent Loop
+
+### Where this sits in Claude Code
+
+This is the heart of any AI agent. Everything before this stage was a single-shot interaction: one prompt, one response, done. The agent loop is what makes Claude Code *agentic* — the model can now chain multiple tool calls together, reasoning step by step until it has enough information to answer.
+
+In the real Claude Code, this loop runs continuously: the model reads files, runs commands, writes edits, re-reads to verify, and only stops when it decides the task is complete. Stage 4 implements that exact pattern.
+
+### What was done
+
+Three structural changes were made to [app/main.py](app/main.py):
+
+**1. Persistent message history** — `messages` is initialized once before the loop and accumulates every turn:
+
+```python
+messages = [{"role": "user", "content": args.p}]
+```
+
+**2. The `while` loop** — the API call moves inside a `while loop:` block. Each iteration sends the full conversation history, not just the latest message:
+
+```python
+while loop:
+    chat = client.chat.completions.create(model=..., messages=messages, tools=[...])
+```
+
+**3. Appending every message** — after each API call, the assistant's response is appended to `messages`. When a tool call happens, its result is appended too, as a `"tool"` role message referencing the call's id:
+
+```python
+messages.append(current_response_message.model_dump())
+
+# if tool call:
+messages.append({
+    "role": "tool",
+    "tool_call_id": current_response_message.tool_calls[0].id,
+    "content": file_content
+})
+```
+
+The loop exits only when the model returns a response with no `tool_calls`, meaning it has finished reasoning and is ready to give a final answer.
+
+### Why the message history must grow
+
+The LLM is stateless — it has no memory between API calls. The only way it can reason across multiple steps is if every prior message (user prompt, assistant thoughts, tool calls, tool results) is re-sent on each iteration. This is why `messages` is built up and passed in full every time.
+
+### The full conversation shape after two turns
+
+```
+[
+  { "role": "user",      "content": "Summarize README.md" },
+  { "role": "assistant", "tool_calls": [{ "id": "call_1", "function": { "name": "Read", "arguments": "{\"file_path\": \"README.md\"}" } }] },
+  { "role": "tool",      "tool_call_id": "call_1", "content": "# My Project\n..." },
+  { "role": "assistant", "content": "The README describes..." }   ← loop exits here
+]
+```
+
+Each role is mandatory: the API will reject a conversation where a `tool` message has no matching `assistant` message with the same `tool_call_id` immediately before it.

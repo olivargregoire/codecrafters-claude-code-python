@@ -47,6 +47,27 @@ def main():
                         "required": ["file_path"]
                         }
                     }
+                }, 
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "Write",
+                        "description": "Write content to a file",
+                        "parameters": {
+                        "type": "object",
+                        "required": ["file_path", "content"],
+                        "properties": {
+                            "file_path": {
+                            "type": "string",
+                            "description": "The path of the file to write to"
+                            },
+                            "content": {
+                            "type": "string",
+                            "description": "The content to write to the file"
+                            }
+                        }
+                        }
+                    }
                 }
             ]
         )
@@ -57,21 +78,39 @@ def main():
             raise RuntimeError("no choices in response")
 
         messages.append(current_response_message.model_dump())
-        
-        # Read tool execution
+        print(current_response_message.tool_calls)
         if current_response_message.tool_calls: 
-            #print("----- in the read tool -------")
-            tool_calls_id                = chat.choices[0].message.tool_calls[0].id
-            tool_calls_type              = chat.choices[0].message.tool_calls[0].type
-            tool_calls_function_name     = chat.choices[0].message.tool_calls[0].function.name
-            tool_calls_function_arguments = chat.choices[0].message.tool_calls[0].function.arguments
+            for tool_call in current_response_message.tool_calls:
 
-            path_to_file = json.loads(tool_calls_function_arguments)["file_path"]
+                
+                tool_calls_id                = tool_call.id
+                tool_calls_type              = tool_call.type
+                tool_calls_function_name     = tool_call.function.name
+                tool_calls_function_arguments = tool_call.function.arguments
+                
+                # Read tool execution
+                if tool_calls_function_name == "Read":
+                    print("----- in the read tool -------")
+                    path_to_file = json.loads(tool_calls_function_arguments)["file_path"]
 
-            with open(path_to_file, "r") as f:
-                file_content = f.read()
-                messages.append({"role": "tool", "tool_call_id": current_response_message.tool_calls[0].id, "content": file_content})
+                    with open(path_to_file, "r") as f:
+                        file_content = f.read()
+                        messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": file_content})
+
+                # Write tool execution
+                if tool_calls_function_name == "Write":
+                    print("----- in the write tool -------")
+                    path_to_file = json.loads(tool_calls_function_arguments)["file_path"]
+                    content = json.loads(tool_calls_function_arguments)["content"]
+                    with open(path_to_file, "w", encoding="utf-8") as file:
+                        file.write(content)
+                        messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": file_content})
+
+
+                
         
+
+        # End loop when no more tool is called
         if not chat.choices[0].message.tool_calls: 
             #print("------- in exit loop -----------")
             loop = False
