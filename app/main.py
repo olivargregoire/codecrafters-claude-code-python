@@ -51,7 +51,7 @@ def main():
             ]
         )
         current_response_message = chat.choices[0].message
-        print(current_response_message)
+        print(f"current response message {current_response_message})
         
         if not chat.choices or len(chat.choices) == 0:
             raise RuntimeError("no choices in response")
