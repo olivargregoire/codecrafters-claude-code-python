@@ -56,7 +56,7 @@ def main():
         if not chat.choices or len(chat.choices) == 0:
             raise RuntimeError("no choices in response")
 
-        messages.append(chat.choices[0].model_dump())
+        messages.append(current_response_message.model_dump())
         
         # Read tool execution
         if current_response_message.tool_calls: 
