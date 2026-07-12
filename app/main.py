@@ -51,7 +51,7 @@ def main():
             ]
         )
         current_response_message = chat.choices[0].message
-        print(f"current response message {current_response_message}")    
+        #print(f"current response message {current_response_message}")    
 
         if not chat.choices or len(chat.choices) == 0:
             raise RuntimeError("no choices in response")
@@ -73,9 +73,9 @@ def main():
                 messages.append({"role": "tool", "tool_call_id": current_response_message.tool_calls[0].id, "content": file_content})
         
         if not chat.choices[0].message.tool_calls: 
-            print("------- in exit loop -----------")
+            #print("------- in exit loop -----------")
             loop = False
-            print(chat.choices[0].message.content)
+            #print(chat.choices[0].message.content)
 
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
