@@ -124,7 +124,7 @@ def main():
                         messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": file_content})
                 
                 if tool_calls_function_name == "Bash":
-                    command = json.load(tool_calls_function_arguments)["command"]
+                    command = json.loads(tool_calls_function_arguments)["command"]
                     print(command)
 
 
