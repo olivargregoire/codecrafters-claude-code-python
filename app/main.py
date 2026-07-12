@@ -50,12 +50,15 @@ def main():
                 }
             ]
         )
-
-
+        current_response_message = chat.choices[0].message
+        
         if not chat.choices or len(chat.choices) == 0:
             raise RuntimeError("no choices in response")
+
+        messages.append(chat.choices)
         
-        if chat.choices[0].message.tool_calls: 
+        # Read tool execution
+        if current_response_message.tool_calls: 
             tool_calls_id                = chat.choices[0].message.tool_calls[0].id
             tool_calls_type              = chat.choices[0].message.tool_calls[0].type
             tool_calls_function_name     = chat.choices[0].message.tool_calls[0].function.name
@@ -65,11 +68,11 @@ def main():
 
             with open(path_to_file, "r") as f:
                 file_content = f.read()
-                messages.append({"role": "tools", "content": file_content})
+                messages.append({"role": "tools", "tool_call_id": current_response_message.tool_calls[0].id, "content": file_content})
         
         if not chat.choices[0].message.tool_calls: 
-            print(chat.choices[0].message.content)
             loop = False
+            print(chat.choices[0].message.content)
 
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
