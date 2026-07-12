@@ -56,7 +56,7 @@ def main():
         if not chat.choices or len(chat.choices) == 0:
             raise RuntimeError("no choices in response")
 
-        messages.append(chat.choices[0])
+        messages.append(chat.choices[0].model_dump())
         
         # Read tool execution
         if current_response_message.tool_calls: 
@@ -70,9 +70,8 @@ def main():
 
             with open(path_to_file, "r") as f:
                 file_content = f.read()
-                messages.append({"role": "tools", "tool_call_id": current_response_message.tool_calls[0].id, "content": file_content})
+                messages.append({"role": "tool", "tool_call_id": current_response_message.tool_calls[0].id, "content": file_content})
         
-        print(messages)
         if not chat.choices[0].message.tool_calls: 
             loop = False
             print(chat.choices[0].message.content)
