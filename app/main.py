@@ -17,8 +17,9 @@ def main():
     if not API_KEY:
         raise RuntimeError("OPENROUTER_API_KEY is not set")
 
+    print(args.p)
+    
     client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
-
     chat = client.chat.completions.create(
         model="anthropic/claude-haiku-4.5",
         messages=[{"role": "user", "content": args.p}],
@@ -44,6 +45,8 @@ def main():
             }
         ]
     )
+    
+    for 
 
     if not chat.choices or len(chat.choices) == 0:
         raise RuntimeError("no choices in response")

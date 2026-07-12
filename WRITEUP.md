@@ -81,3 +81,44 @@ The model doesn't execute `Read` itself — it can't. Instead, when it decides a
 | Python code (next stage) | Receives the call, executes the real action, returns the result |
 
 This three-layer split is the core pattern behind every AI agent framework.
+
+---
+
+## Stage 3 — Detecting and Executing Tool Calls
+
+### Where this sits in Claude Code
+
+Stage 2 taught the model *what tools exist*. Stage 3 is where the model's intent becomes real action. This is the first moment the agent actually touches the filesystem — the bridge between "the model wants to read a file" and "the file gets read."
+
+In the real Claude Code, every response is inspected for tool calls before any text is shown to the user. If tools are requested, they are executed and their results are fed back into the conversation. Stage 3 implements the first half of that: detect and execute.
+
+### What was done
+
+Two conditional branches were added after the API call ([app/main.py:51-69](app/main.py#L51-L69)):
+
+```python
+if chat.choices[0].message.tool_calls:
+    tool_calls_function_arguments = chat.choices[0].message.tool_calls[0].function.arguments
+    path_to_file = json.loads(tool_calls_function_arguments)["file_path"]
+
+    with open(path_to_file, "r") as f:
+        file_content = f.read()
+        print(file_content)
+
+if not chat.choices[0].message.tool_calls:
+    print(chat.choices[0].message.content)
+```
+
+The logic is:
+1. **Check for tool calls** — inspect `message.tool_calls`; if present, the model wants to act, not just reply.
+2. **Extract and parse the arguments** — `function.arguments` is a raw JSON string, so `json.loads()` turns it into a dict to get `file_path`.
+3. **Execute the Read** — open the file and print its raw contents to stdout.
+4. **Fall through to text** — only print `message.content` when there are no tool calls (the two cases are mutually exclusive in the API).
+
+### Key detail: arguments are a JSON string, not a dict
+
+The API returns `function.arguments` as a serialized JSON string (e.g. `'{"file_path": "/app/main.py"}'`), not a Python dict. The `json.loads()` call is mandatory — skipping it would try to subscript a string and crash.
+
+### What's still missing
+
+The tool result is printed but never sent back to the model. The conversation ends after one tool call. The next stages introduce the **agent loop**: the file contents get added to the message history as a `tool` role message, and the model is called again so it can reason over the result and decide what to do next.
