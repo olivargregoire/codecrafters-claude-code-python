@@ -181,3 +181,39 @@ The LLM is stateless — it has no memory between API calls. The only way it can
 ```
 
 Each role is mandatory: the API will reject a conversation where a `tool` message has no matching `assistant` message with the same `tool_call_id` immediately before it.
+
+---
+
+## Stage 5 — The Write Tool
+
+### Where this sits in Claude Code
+
+Read lets the model observe the filesystem; Write lets it act on it. Together they unlock the core coding workflow: read a file to understand it, then write a modified version back. This is exactly what Claude Code does when you ask it to refactor or fix a bug.
+
+Stage 5 also introduces a pattern that scales to every subsequent tool: the `for tool_call in current_response_message.tool_calls` loop ([app/main.py:97-126](app/main.py#L97-L126)) dispatches by function name, so adding a new tool is just adding an `if` branch.
+
+### What was done
+
+**In the `tools` list** — the Write specification was added alongside Read ([app/main.py:51-68](app/main.py#L51-L68)). It declares two required parameters: `file_path` and `content`.
+
+**In the dispatch loop** — a `Write` branch opens the file in write mode (`"w"`) and writes the model's content verbatim. If the file doesn't exist it is created; if it does it is overwritten:
+
+```python
+if tool_calls_function_name == "Write":
+    path_to_file = json.loads(tool_calls_function_arguments)["file_path"]
+    content      = json.loads(tool_calls_function_arguments)["content"]
+    with open(path_to_file, "w", encoding="utf-8") as file:
+        file.write(content)
+    messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": "..."})
+```
+
+The tool result appended to `messages` just needs to confirm the action completed — the model uses it to decide whether to proceed or retry.
+
+### Bug to fix: `file_content` used in the Write result
+
+The current Write branch appends `file_content` as the tool result ([app/main.py:124](app/main.py#L124)), but `file_content` is a variable set inside the Read branch. If Write is called without a preceding Read in the same iteration, this is either a stale value or a `NameError`. The fix is to use a dedicated confirmation string:
+
+```python
+# instead of: "content": file_content
+"content": f"Successfully wrote to {path_to_file}"
+```

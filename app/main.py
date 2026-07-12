@@ -68,6 +68,23 @@ def main():
                         }
                         }
                     }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "Bash",
+                        "description": "Execute a shell command",
+                        "parameters": {
+                        "type": "object",
+                        "required": ["command"],
+                        "properties": {
+                            "command": {
+                            "type": "string",
+                            "description": "The command to execute"
+                            }
+                        }
+                        }
+                    }
                 }
             ]
         )
@@ -105,6 +122,12 @@ def main():
                     with open(path_to_file, "w", encoding="utf-8") as file:
                         file.write(content)
                         messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": file_content})
+                
+                if tool_calls_function_name == "Bash":
+                    command = json.load(tool_calls_function_arguments)["command"]
+                    print(command)
+
+
 
 
         # End loop when no more tool is called
