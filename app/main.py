@@ -90,7 +90,7 @@ def main():
                 
                 # Read tool execution
                 if tool_calls_function_name == "Read":
-                    print("----- in the read tool -------")
+                    #print("----- in the read tool -------")
                     path_to_file = json.loads(tool_calls_function_arguments)["file_path"]
 
                     with open(path_to_file, "r") as f:
@@ -99,16 +99,13 @@ def main():
 
                 # Write tool execution
                 if tool_calls_function_name == "Write":
-                    print("----- in the write tool -------")
+                    #print("----- in the write tool -------")
                     path_to_file = json.loads(tool_calls_function_arguments)["file_path"]
                     content = json.loads(tool_calls_function_arguments)["content"]
                     with open(path_to_file, "w", encoding="utf-8") as file:
                         file.write(content)
                         messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": file_content})
 
-
-                
-        
 
         # End loop when no more tool is called
         if not chat.choices[0].message.tool_calls: 
