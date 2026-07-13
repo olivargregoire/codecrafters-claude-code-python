@@ -129,8 +129,10 @@ def main():
                     results = subprocess.run(command, shell=True, capture_output=True, text=True)
                     if results.returncode == 0:
                         print(results.stdout)
+                        messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": results.stdout})
                     else:
                         print(results.stderr)
+                        messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": results.stderr})               
 
 
                     
