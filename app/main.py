@@ -32,6 +32,26 @@ def main():
                     "chmod -R 777 /",
                     "> /dev/sda",
                 ]
+    def run_sandbox(command):
+        uid = os.getuid()
+        gid = os.getgid()
+        cwd = os.getcwd()
+
+        docker_cmd = [
+            "docker", "run", "--rm", #will destroy the container after the command exits
+            "--network", "none", #completely isolate the networking stack of a container
+            "--memory", "256m",  #cgroups memory limitation
+            "--cpus", "0.5",     # cpu limitation
+            "--cap-drop", "ALL"
+            "--user", f"{uid}:{gid}", #run the command as the current user
+            "-v", f"{cwd}:/workspace", #mount the project directory, nothing else
+            "-w", "/workspace", #set the working directory directly
+            "alpine:latest",
+            "sh", "-c", command,
+        ]
+
+        result = subprocess.run(docker_cmd, capture_output=True, text=True, timeout=30)
+        return result
 
     while loop: 
 
@@ -140,11 +160,26 @@ def main():
                         messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": "Command blocked: matches a known dangerous pattern and was not executed."})
                     else:
                         print(f"Claude wants to run: {command}", file=sys.stderr)
-                        sys.stderr.write("Allow? [y/N]: ")
-                        sys.stderr.flush()
-                        response = sys.stdin.readline().strip()
-                        if response.lower() == "y":
-                            results = subprocess.run(command, shell=True, capture_output=True, text=True)
+                        # Only prompt when a human is actually attached to stdin.
+                        # Under automated harnesses (CodeCrafters, CI, pipes) stdin
+                        # is not a TTY and readline() returns "" (EOF), which used to
+                        # be read as a denial and blocked every bash command. In that
+                        # case auto-approve; the BLOCKLIST above still guards the
+                        # catastrophic commands.
+                        if sys.stdin.isatty():
+                            sys.stderr.write("Allow? [y/N]: ")
+                            sys.stderr.flush()
+                            approved = sys.stdin.readline().strip().lower() == "y"
+                        else:
+                            approved = True
+                        if approved:
+
+                            #Not Sandboxed at all command execution : 
+                            #results = subprocess.run(command, shell=True, capture_output=True, text=True)
+
+                            #Sandboxed Command execution : 
+                            results = run_sandbox(command)
+
                             if results.returncode == 0:
                                 messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": results.stdout})
                             else:
