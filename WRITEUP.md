@@ -217,3 +217,37 @@ The current Write branch appends `file_content` as the tool result ([app/main.py
 # instead of: "content": file_content
 "content": f"Successfully wrote to {path_to_file}"
 ```
+
+---
+
+## Stage 6 — The Bash Tool
+
+### Where this sits in Claude Code
+
+Read and Write cover the filesystem. Bash gives the model access to everything else: running tests, installing packages, deleting files, creating directories, executing scripts. It is the most powerful tool in the set — and the most dangerous, since `shell=True` runs the command through the OS shell with no sandboxing.
+
+In the real Claude Code, the Bash tool is guarded by a permission system that shows the user the command and asks for approval before running it. In this challenge the loop runs it directly, which is fine for a learning environment but something to keep in mind for production use.
+
+### What was done
+
+A `Bash` branch was added to the dispatch loop ([app/main.py:127-135](app/main.py#L127-L135)). It uses `subprocess.run` with `shell=True` and `capture_output=True` to execute the command and capture both stdout and stderr:
+
+```python
+if tool_calls_function_name == "Bash":
+    command = json.loads(tool_calls_function_arguments)["command"]
+    results = subprocess.run(command, shell=True, capture_output=True, text=True)
+    if results.returncode == 0:
+        messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": results.stdout})
+    else:
+        messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": results.stderr})
+```
+
+On success (`returncode == 0`) stdout is fed back to the model. On failure, stderr is sent instead — this lets the model read the error message and decide how to recover (retry with a different command, report the failure, etc.).
+
+### Why stderr on failure matters
+
+If a command fails and you return an empty string or a generic "error" message, the model has no signal to reason from. Returning the actual stderr output lets it read the exact error — "No such file or directory", "Permission denied", etc. — and self-correct in the next turn.
+
+### Note on the intermediate `print` calls
+
+The current implementation calls `print(results.stdout)` / `print(results.stderr)` before appending to messages. These should go to `stderr` (or be removed) to avoid polluting stdout with intermediate tool results — only the model's final text answer should appear on stdout.

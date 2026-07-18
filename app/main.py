@@ -23,6 +23,15 @@ def main():
     messages = [{"role": "user", "content": args.p}]
 
     loop = True
+    # This blocklist method is really bad and seems to be really easily bypassable, to be improved later. An Allowlist would make more sense 
+    BLOCKLIST = [
+                    "rm -rf /",
+                    ":(){ :|:& };:",
+                    "dd if=",
+                    "mkfs",
+                    "chmod -R 777 /",
+                    "> /dev/sda",
+                ]
 
     while loop: 
 
@@ -98,9 +107,7 @@ def main():
         messages.append(current_response_message.model_dump())
         #print(current_response_message.tool_calls)
         if current_response_message.tool_calls: 
-            for tool_call in current_response_message.tool_calls:
-
-                
+            for tool_call in current_response_message.tool_calls:    
                 tool_calls_id                = tool_call.id
                 tool_calls_type              = tool_call.type
                 tool_calls_function_name     = tool_call.function.name
@@ -123,22 +130,27 @@ def main():
                     with open(path_to_file, "w", encoding="utf-8") as file:
                         file.write(content)
                         messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": file_content})
-                
+                #Bash tool execution
                 if tool_calls_function_name == "Bash":
                     command = json.loads(tool_calls_function_arguments)["command"]
-                    results = subprocess.run(command, shell=True, capture_output=True, text=True)
-                    if results.returncode == 0:
-                        print(results.stdout)
-                        messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": results.stdout})
+
+                    blocked = any(pattern in command for pattern in BLOCKLIST)
+
+                    if blocked:
+                        messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": "Command blocked: matches a known dangerous pattern and was not executed."})
                     else:
-                        print(results.stderr)
-                        messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": results.stderr})               
-
-
-                    
-
-
-
+                        print(f"Claude wants to run: {command}", file=sys.stderr)
+                        sys.stderr.write("Allow? [y/N]: ")
+                        sys.stderr.flush()
+                        response = sys.stdin.readline().strip()
+                        if response.lower() == "y":
+                            results = subprocess.run(command, shell=True, capture_output=True, text=True)
+                            if results.returncode == 0:
+                                messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": results.stdout})
+                            else:
+                                messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": results.stderr})
+                        else:
+                            messages.append({"role": "tool", "tool_call_id": tool_calls_id, "content": "User denied permissions to run this command."})
 
         # End loop when no more tool is called
         if not chat.choices[0].message.tool_calls: 
@@ -148,10 +160,6 @@ def main():
 
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
-
-    # TODO: Uncomment the following line to pass the first stage
-
-
 
 if __name__ == "__main__":
     main()
