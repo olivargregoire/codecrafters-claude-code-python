@@ -1,7 +1,11 @@
 [![progress-banner](https://backend.codecrafters.io/progress/claude-code/fa8f5230-76f1-4bee-bdb2-4afe50a94c8e)](https://app.codecrafters.io/users/olivargregoire?r=2qF)
 
 This is a starting point for Python solutions to the
-["Build Your own Claude Code" Challenge](https://codecrafters.io/challenges/claude-code).
+["Build Your own Claude Code" Challenge](https://codecrafters.io/challenges/claude-code). 
+
+
+**I did a quick write up that can be found in /app/WRITEUP.md folder.**
+
 
 Claude Code is an AI coding assistant that uses Large Language Models (LLMs) to
 understand code and perform actions through tool calls. In this challenge,

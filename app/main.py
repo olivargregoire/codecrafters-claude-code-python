@@ -39,7 +39,7 @@ def main():
 
         docker_cmd = [
             "docker", "run", "--rm", #will destroy the container after the command exits
-            "--network", "none", #completely isolate the networking stack of a container
+            "--network", "none", #completely isolate the networking stack of a container, only the loopback in the network namespace.
             "--memory", "256m",  #cgroups memory limitation
             "--cpus", "0.5",     # cpu limitation
             "--cap-drop", "ALL"
