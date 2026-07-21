@@ -14,6 +14,10 @@ The challenge walks me through the fundamentals on AI coding assistant:
 - Managing the context within the loops, so the LLM always have the whole context.  
 - A bonus part (that was the one I wanted to understand the most) on the execution command security when done by the LLM.
 
+This scheme is the final goal of what we would like to achieve in this project. Via API calls to the model, tools advertized and executable, the agent can take some actions and for example delete a file that we ask him to:
+ 
+![File deletion example](image.png)
+
 ---
 
 ## Stage 1 — Connecting to the LLM
