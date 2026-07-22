@@ -15,22 +15,18 @@ The challenge walks me through the fundamentals on AI coding assistant:
 - A bonus part (that was the one I wanted to understand the most) on the execution command security when done by the LLM.
 
 This scheme is the final goal of what we would like to achieve in this project. Via API calls to the model, tools advertized and executable, the agent can take some actions and for example delete a file that we ask him to:
- 
+
 ![File deletion example](image.png)
 
 ---
 
 ## Stage 1 — Connecting to the LLM
 
-This is the foundation: getting the program to talk to a language model at all, and understand the current code code crafter gives me. 
+The first step is to understand the code given by the project and what it will be. The first code is the foundation: it is getting the program to talk to a language model at all via an API key and by parsing the prompt I send.
 
-[app/main.py](app/main.py) is the single entry point. The first code we have reads configuration from env vars - the OpenRouter API key and the base URL, making the setup OpenAI-compatible with their REST interface. 
+[app/main.py](app/main.py) is the single entry point. The first code we have reads configuration from env vars - the OpenRouter API key and the base URL, making the setup OpenAI-compatible with their REST interface. it then parses a `-p` prompt argument (the user's instruction passed from the command line), and sends a chat completion request to `anthropic/claude-haiku-4.5` via the OpenAI SDK.
 
-Secondly, it parses a `-p` prompt argument** — the user's instruction passed from the command line.
-
-On a third part, it sends a chat completion request** to `anthropic/claude-haiku-4.5` via the OpenAI SDK, forwarding the user prompt as a single `user` message.
-
-And finally it prints the model's text reply** from `chat.choices[0].message.content`.
+And finally it prints the model's text reply from `chat.choices[0].message.content`.
 
 At this point the agent is just a wrapper around the API — it can chat, but has no awareness of the filesystem or any tools. There is no "agentic" side.
 
